@@ -1,0 +1,50 @@
+name: ERPNext checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: erpnext-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  local-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pyflakes apps tools deploy tests
+      - run: python -m unittest discover -s tests -v
+      - name: Validate Docker Compose
+        run: |
+          python -c "from tools.shop import Shop; Shop(demo=True).initialize()"
+          docker compose --env-file .env.demo config --quiet
+  real-erpnext:
+    needs: local-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ERPNext with fictional practice records
+        run: python tools/shop.py --demo install
+      - name: Check submitted ERPNext transactions and print formats
+        run: python tools/shop.py --demo acceptance
+      - name: Restore a database record and a private attachment
+        run: python tools/shop.py --demo restore-check
+      - name: Show service logs if a check fails
+        if: failure()
+        run: python tools/shop.py --demo logs
+      - name: Stop the disposable containers
+        if: always()
+        run: python tools/shop.py --demo stop

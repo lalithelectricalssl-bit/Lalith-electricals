@@ -1,0 +1,49 @@
+<style>
+  .print-format { font-family: Arial, sans-serif; font-size: 11pt; color: #172c3d; }
+  .shop-head { border-bottom: 2px solid #172c3d; padding-bottom: 10px; }
+  .shop-meta, .shop-lines, .shop-signatures { width: 100%; }
+  .shop-meta td { padding: 8px 0; vertical-align: top; width: 50%; }
+  .shop-lines { border-collapse: collapse; }
+  .shop-lines th, .shop-lines td { border: 1px solid #bac5ce; padding: 7px; }
+  .shop-lines th { background: #edf1f4; text-align: left; }
+  .shop-lines thead { display: table-header-group; }
+  .shop-lines tr { page-break-inside: avoid; }
+  .shop-right { text-align: right; }
+  .shop-totals { margin-left: auto; margin-top: 12px; width: 45%; }
+  .shop-signatures { margin-top: 44px; }
+  .shop-signatures td { width: 50%; border-top: 1px solid #bac5ce; padding-top: 8px; }
+</style>
+{% set delivery = doc.doctype == "Delivery Note" %}
+<div class="shop-head">
+{% if letter_head and not no_letterhead %}{{ letter_head }}{% else %}<h2>{{ doc.company | e }}</h2>{% endif %}
+</div>
+<h3>{{ ("Invoice" if doc.doctype == "Sales Invoice" else doc.doctype) | upper | e }}
+{% if doc.docstatus == 0 %} · DRAFT{% endif %}</h3>
+{% if doc.company == "Lalith Practice Shop" %}<p><strong>SAMPLE DOCUMENT</strong></p>{% endif %}
+<table class="shop-meta"><tr>
+<td><strong>{{ (doc.get("customer_name") or doc.get("party_name") or doc.get("customer") or "") | e }}</strong><br>
+{{ (doc.get("address_display") or "") | striptags | e }}</td>
+<td class="shop-right">{{ doc.name | e }}<br>
+{{ doc.get_formatted("posting_date" if doc.get("posting_date") else "transaction_date") | e }}
+{% if doc.get("due_date") %}<br>Due {{ doc.get_formatted("due_date") | e }}{% endif %}
+{% if doc.get("po_no") %}<br>PO {{ doc.po_no | e }}{% endif %}</td>
+</tr></table>
+<table class="shop-lines">
+<thead><tr><th>Item</th><th>Quantity</th>{% if not delivery %}<th>Rate</th><th>Amount</th>{% endif %}</tr></thead>
+<tbody>{% for line in doc.items %}<tr>
+<td>{{ line.item_name | e }}</td><td>{{ line.get_formatted("qty") | e }} {{ line.uom | e }}</td>
+{% if not delivery %}<td>{{ line.get_formatted("rate") | e }}</td><td>{{ line.get_formatted("amount") | e }}</td>{% endif %}
+</tr>{% endfor %}</tbody>
+</table>
+{% if not delivery %}
+<table class="shop-totals">
+<tr><td>Net total</td><td class="shop-right">{{ doc.get_formatted("net_total") | e }}</td></tr>
+{% for tax in doc.get("taxes", []) %}<tr><td>{{ tax.description | e }}</td><td class="shop-right">{{ tax.get_formatted("tax_amount") | e }}</td></tr>{% endfor %}
+<tr><td><strong>Grand total</strong></td><td class="shop-right"><strong>{{ doc.get_formatted("grand_total") | e }}</strong></td></tr>
+{% if doc.doctype == "Sales Invoice" %}<tr><td>Balance due</td><td class="shop-right">{{ doc.get_formatted("outstanding_amount") | e }}</td></tr>{% endif %}
+</table>
+{% endif %}
+{% if doc.get("custom_lalith_repair_job") %}<p>Repair {{ doc.custom_lalith_repair_job | e }}</p>{% endif %}
+{% if doc.get("terms") %}<p>{{ doc.terms | striptags | e }}</p>{% endif %}
+<table class="shop-signatures"><tr><td>Authorized by</td><td>Received by</td></tr></table>
+{% if footer and not no_letterhead %}<div class="letter-head-footer">{{ footer }}</div>{% endif %}

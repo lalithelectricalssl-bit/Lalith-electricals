@@ -1,0 +1,168 @@
+{
+  "doctype": "DocType",
+  "module": "Lalith Shop",
+  "name": "Electrical Repair Job",
+  "engine": "InnoDB",
+  "field_order": [
+    "customer",
+    "company",
+    "received_date",
+    "appliance",
+    "serial_number",
+    "fault",
+    "status",
+    "customer_approved",
+    "approval_reference",
+    "estimate",
+    "parts",
+    "labour_item",
+    "labour_charge",
+    "technician_notes",
+    "expected_date"
+  ],
+  "fields": [
+    {
+      "fieldname": "customer",
+      "label": "Customer",
+      "fieldtype": "Link",
+      "options": "Customer",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "company",
+      "label": "Company",
+      "fieldtype": "Link",
+      "options": "Company",
+      "reqd": 1
+    },
+    {
+      "fieldname": "received_date",
+      "label": "Received date",
+      "fieldtype": "Date",
+      "default": "Today",
+      "reqd": 1
+    },
+    {
+      "fieldname": "appliance",
+      "label": "Appliance / model",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "serial_number",
+      "label": "Serial number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "fault",
+      "label": "Reported fault",
+      "fieldtype": "Small Text",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": "Received\nInspecting\nAwaiting approval\nApproved\nIn progress\nReady\nCollected\nCancelled",
+      "default": "Received",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "customer_approved",
+      "label": "Customer approved the estimate",
+      "fieldtype": "Check"
+    },
+    {
+      "fieldname": "approval_reference",
+      "label": "Approval date or reference",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "estimate",
+      "label": "Estimate",
+      "fieldtype": "Currency"
+    },
+    {
+      "fieldname": "parts",
+      "label": "Spare parts",
+      "fieldtype": "Table",
+      "options": "Electrical Repair Part"
+    },
+    {
+      "fieldname": "labour_item",
+      "label": "Labour item",
+      "fieldtype": "Link",
+      "options": "Item",
+      "default": "Repair Labour"
+    },
+    {
+      "fieldname": "labour_charge",
+      "label": "Labour charge",
+      "fieldtype": "Currency"
+    },
+    {
+      "fieldname": "technician_notes",
+      "label": "Technician notes",
+      "fieldtype": "Small Text"
+    },
+    {
+      "fieldname": "expected_date",
+      "label": "Expected ready date",
+      "fieldtype": "Date"
+    }
+  ],
+  "autoname": "format:REP-{YYYY}-{#####}",
+  "track_changes": 1,
+  "title_field": "appliance",
+  "search_fields": "customer,appliance,serial_number",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1,
+      "print": 1,
+      "export": 1,
+      "report": 1
+    },
+    {
+      "role": "Sales Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1,
+      "print": 1,
+      "export": 1,
+      "report": 1
+    },
+    {
+      "role": "Sales User",
+      "read": 1,
+      "create": 1,
+      "write": 1,
+      "print": 1,
+      "export": 1,
+      "report": 1
+    },
+    {
+      "role": "Stock Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1,
+      "print": 1,
+      "export": 1,
+      "report": 1
+    },
+    {
+      "role": "Stock User",
+      "read": 1,
+      "create": 1,
+      "write": 1,
+      "print": 1,
+      "export": 1,
+      "report": 1
+    }
+  ]
+}

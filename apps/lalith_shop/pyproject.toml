@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lalith_shop"
+version = "0.1.0"
+description = "Electrical retail, company supplies and repairs for ERPNext"
+requires-python = ">=3.11"
+license = {text = "GPL-3.0-or-later"}
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["lalith_shop*"]
+
+[tool.setuptools.package-data]
+lalith_shop = ["*.txt", "**/*.json", "**/*.js", "**/*.html"]

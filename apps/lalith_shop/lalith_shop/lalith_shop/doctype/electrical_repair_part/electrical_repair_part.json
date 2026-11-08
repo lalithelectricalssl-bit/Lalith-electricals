@@ -1,0 +1,46 @@
+{
+  "doctype": "DocType",
+  "module": "Lalith Shop",
+  "name": "Electrical Repair Part",
+  "engine": "InnoDB",
+  "field_order": [
+    "item_code",
+    "qty",
+    "warehouse",
+    "rate"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_code",
+      "label": "Spare part",
+      "fieldtype": "Link",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "qty",
+      "label": "Quantity",
+      "fieldtype": "Float",
+      "default": 1,
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "warehouse",
+      "label": "Source warehouse",
+      "fieldtype": "Link",
+      "options": "Warehouse",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "rate",
+      "label": "Selling rate",
+      "fieldtype": "Currency",
+      "in_list_view": 1
+    }
+  ],
+  "istable": 1,
+  "permissions": []
+}

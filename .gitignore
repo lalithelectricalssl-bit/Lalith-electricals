@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+.local/
+backups/
+sites/
+private/
+site_config.json
+*.sql
+*.sql.gz
+*.tgz
+*.tar
+*.zip
+*.pyc
+__pycache__/
+.venv/
+.DS_Store

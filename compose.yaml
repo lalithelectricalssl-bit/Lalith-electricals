@@ -1,0 +1,134 @@
+# Service layout adapted from frappe/frappe_docker under its MIT license.
+# See deploy/Frappe-Docker-LICENSE and docs/UPSTREAM.md.
+x-app: &app
+  image: lalith-erpnext:v16.53.0-shop1
+  platform: ${LALITH_PLATFORM:?Run the installer}
+  pull_policy: never
+  restart: unless-stopped
+  volumes:
+    - sites:/home/frappe/frappe-bench/sites
+
+services:
+  db:
+    image: mariadb:11.8@sha256:c4124d1afa875e47f2892edf26b482fa54f796e2f342d3717a04ca091a22a9bd
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --innodb-snapshot-isolation=OFF
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:?Run the installer}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - database:/var/lib/mysql
+
+  redis-cache:
+    image: redis:8.6-alpine@sha256:f4ed7d6732f9a5dcc6b64e2b347860b9f329334bfd4839a672f78cd981a8bba6
+    restart: unless-stopped
+
+  redis-queue:
+    image: redis:8.6-alpine@sha256:f4ed7d6732f9a5dcc6b64e2b347860b9f329334bfd4839a672f78cd981a8bba6
+    restart: unless-stopped
+    volumes:
+      - queue:/data
+
+  configurator:
+    <<: *app
+    restart: "no"
+    entrypoint: ["bash", "-ec"]
+    command:
+      - |
+        ls -1 apps > sites/apps.txt
+        bench set-config -g db_host db
+        bench set-config -gp db_port 3306
+        bench set-config -g redis_cache redis://redis-cache:6379
+        bench set-config -g redis_queue redis://redis-queue:6379
+        bench set-config -g redis_socketio redis://redis-queue:6379
+        bench set-config -gp socketio_port 9000
+        bench set-config -g chromium_path /usr/lib/chromium/chromium-headless-shell
+    depends_on:
+      db:
+        condition: service_healthy
+      redis-cache:
+        condition: service_started
+      redis-queue:
+        condition: service_started
+
+  backend:
+    <<: *app
+    build: .
+    environment:
+      GUNICORN_WORKERS: 2
+      GUNICORN_THREADS: 2
+      GUNICORN_TIMEOUT: 120
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+
+  frontend:
+    <<: *app
+    command: ["nginx-entrypoint.sh"]
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: ${SITE_NAME:?Run the installer}
+      NGINX_LISTEN_PORT: 8080
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+      PROXY_READ_TIMEOUT: 120
+      CLIENT_MAX_BODY_SIZE: 50m
+    ports:
+      - "127.0.0.1:${HTTP_PORT:?Run the installer}:8080"
+    depends_on:
+      - backend
+      - websocket
+
+  websocket:
+    <<: *app
+    command: ["node", "/home/frappe/frappe-bench/apps/frappe/socketio.js"]
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+
+  worker-short:
+    <<: *app
+    command: ["bench", "worker", "--queue", "short,default"]
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+
+  worker-long:
+    <<: *app
+    command: ["bench", "worker", "--queue", "long,default,short"]
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+
+  scheduler:
+    <<: *app
+    command: ["bench", "schedule"]
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+
+  toolbox:
+    <<: *app
+    profiles: [tools]
+    restart: "no"
+    environment:
+      SITE_NAME: ${SITE_NAME}
+      DB_ROOT_PASSWORD: ${DB_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Run the installer}
+    entrypoint: ["/home/frappe/frappe-bench/env/bin/python", "/home/frappe/lalith_runtime.py"]
+
+volumes:
+  sites:
+  database:
+  queue:
