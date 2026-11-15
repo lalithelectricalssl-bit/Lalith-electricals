@@ -129,6 +129,12 @@ def run_checks():
 
     shop = prepare()
     warehouse = shop["warehouse"]
+    order_meta = frappe.get_meta("Sales Order")
+    order_fields = [field.fieldname for field in order_meta.fields]
+    position = order_fields.index("customer_name") + 1
+    assert order_fields[position:position + 2] == ["po_no", "po_date"]
+    assert order_meta.get_field("po_no").label == "Customer PO Number"
+    print("PASS customer PO number appears next to the customer on Sales Order")
     before = stock(FAN, warehouse)
     opened = post({"doctype": "POS Opening Entry", "company": COMPANY, "pos_profile": shop["profile"],
         "user": "Administrator", "period_start_date": now_datetime(),
@@ -162,6 +168,7 @@ def run_checks():
         row.warehouse = warehouse
     order.insert()
     order.submit()
+    assert order.reload().po_no == po
     assert any(row.po_no == po for row in overview(COMPANY)["orders"])
     delivery = make_delivery_note(order.name)
     delivery.set_warehouse = warehouse
