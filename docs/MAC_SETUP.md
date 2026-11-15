@@ -33,7 +33,7 @@ python3 tools/shop.py --demo credentials
 
 The first command downloads the ERPNext image, builds the custom app and creates an isolated practice site. Leave Terminal open until it prints the address. The second command prints the initial password for **Administrator**.
 
-Open http://localhost:8081 in Safari. The company is **Lalith Practice Shop**. Try a sample sale and the [shop workflows](SHOP_GUIDE.md). The practice site has 10 sample fans and 20 sample capacitors at the start.
+Open http://localhost:8081 in Safari. Search for **Shop Operations**. The company is **Lalith Practice Shop**. Try a sample sale and the [shop workflows](SHOP_GUIDE.md). The practice site has 10 sample fans and 20 sample capacitors at the start.
 
 ## 4. Create your real shop site
 
@@ -69,6 +69,12 @@ python3 tools/shop.py stop
 ```
 
 For practice, put `--demo` before the command. Use [the backup guide](BACKUPS.md) to keep a separate copy.
+
+## Update an existing installation
+
+Back up the running shop from its current project folder. Update the source files from GitHub in that folder, keeping `.env`, `.env.demo` and `.local`. Run `python3 tools/shop.py install` from that folder to rebuild the app and migrate its existing database. For the isolated practice site use `python3 tools/shop.py --demo install`. After signing in, open **Shop Operations**. Reload the page after updating if it still shows the earlier workspace layout.
+
+For reminder notifications, keep Docker Desktop and the ERPNext scheduler running while you want alerts.
 
 ## If an error appears
 

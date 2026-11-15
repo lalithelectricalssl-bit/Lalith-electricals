@@ -5,6 +5,8 @@ from pathlib import Path
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
+from lalith_shop.price_history import backfill_current_prices
+
 
 def ensure(doctype, name, **values):
     if frappe.db.exists(doctype, name):
@@ -13,20 +15,43 @@ def ensure(doctype, name, **values):
 
 
 def install():
-    create_custom_fields({
+    fields = {
         dt: [{"fieldname": "custom_lalith_repair_job", "label": "Electrical repair job",
               "fieldtype": "Link", "options": "Electrical Repair Job",
               "insert_after": "company", "read_only": 1, "no_copy": 1}]
         for dt in ("Stock Entry", "Sales Invoice")
-    })
-    html = (Path(__file__).parent / "templates" / "company_document.html").read_text()
+    }
+    fields["Quotation Item"] = [
+        {"fieldname": "custom_lalith_supplier", "label": "Source supplier", "fieldtype": "Link",
+         "options": "Supplier", "insert_after": "item_name",
+         "description": "Internal sourcing reference. It is excluded from customer PDFs."}
+    ]
+    create_custom_fields(fields)
+    templates = Path(__file__).parent / "templates"
+    html = (templates / "company_document.html").read_text()
     for doctype, title in (("Sales Invoice", "Invoice"), ("Quotation", "Quotation"), ("Delivery Note", "Delivery Note")):
         ensure("Print Format", f"Lalith Company {title}", doc_type=doctype, module="Lalith Shop",
                custom_format=1, print_format_type="Jinja", html=html, standard="No")
+        layout = (templates / "shop_invoice.html").read_text() if doctype == "Sales Invoice" else html
+        ensure("Print Format", f"Lalith Electricals {title}", doc_type=doctype, module="Lalith Shop",
+               custom_format=1, print_format_type="Jinja", pdf_generator="chrome", html=layout, standard="No")
+    backfill_current_prices()
     if frappe.db.exists("Workspace", "Lalith Electricals"):
+        workspace = frappe.get_doc("Workspace", "Lalith Electricals")
+        if not any(link.link_type == "Page" and link.link_to == "shop-operations" for link in workspace.links):
+            card = next((link for link in workspace.links if link.type == "Card Break"), None)
+            if card:
+                card.link_count = (card.link_count or 0) + 1
+                workspace.append("links", {"type": "Link", "label": "Shop Operations", "link_type": "Page",
+                                           "link_to": "shop-operations", "idx": card.idx + 1})
+                workspace.links.insert(card.idx, workspace.links.pop())
+                for index, link in enumerate(workspace.links, 1):
+                    link.idx = index
+                workspace.save()
         return
     sections = {
-        "Retail and company sales": [("Point of Sale", "Page", "point-of-sale")] + [
+        "Retail and company sales": [("Shop Operations", "Page", "shop-operations"),
+                                     ("Point of Sale", "Page", "point-of-sale")] + [
             (name, "DocType", name) for name in ("Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "Customer")],
         "Purchases and stock": [(name, "DocType", name) for name in
             ("Item", "Stock Entry", "Stock Reconciliation", "Purchase Order", "Purchase Receipt", "Purchase Invoice", "Supplier")],

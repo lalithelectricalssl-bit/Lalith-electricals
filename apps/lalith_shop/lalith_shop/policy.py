@@ -35,3 +35,14 @@ def grouped_parts(rows, warehouse=None, include_rate=False):
                number(row.get("rate"), "Rate") if include_rate else None)
         counts[key] += number(row.get("qty"), "Quantity", positive=True)
     return dict(counts)
+
+
+def payment_stage(due_date, today, lead_days):
+    days_left = (due_date - today).days
+    if days_left < 0:
+        return "Overdue"
+    if days_left == 0:
+        return "Due today"
+    if days_left <= lead_days:
+        return "Due soon"
+    return None

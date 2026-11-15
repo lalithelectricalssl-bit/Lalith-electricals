@@ -1,0 +1,44 @@
+{
+ "doctype": "DocType",
+ "name": "Lalith Shop Settings",
+ "module": "Lalith Shop",
+ "engine": "InnoDB",
+ "modified": "2026-11-15 00:00:00.000000",
+ "field_order": [
+  "enable_payment_reminders",
+  "reminder_user",
+  "reminder_lead_days"
+ ],
+ "fields": [
+  {
+   "fieldname": "enable_payment_reminders",
+   "label": "Send In-App Payment Reminders",
+   "fieldtype": "Check",
+   "default": "1"
+  },
+  {
+   "fieldname": "reminder_user",
+   "label": "Reminder Recipient",
+   "fieldtype": "Link",
+   "options": "User",
+   "default": "Administrator",
+   "description": "Choose a shop user with access to Accounts Receivable and the invoices to be tracked."
+  },
+  {
+   "fieldname": "reminder_lead_days",
+   "label": "Days Before Due Date",
+   "fieldtype": "Int",
+   "default": "3",
+   "reqd": 1,
+   "description": "Use 0 for reminders on the due date and when a payment becomes overdue."
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1
+  }
+ ],
+ "issingle": 1
+}

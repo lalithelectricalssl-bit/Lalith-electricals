@@ -1,9 +1,12 @@
 """Fictional practice records and acceptance checks for the isolated site."""
+from datetime import timedelta
 from pathlib import Path
 
 import frappe
 from frappe.utils import flt, getdate, nowdate, now_datetime
 
+from lalith_shop.operations import add_payment_alert, overview, payment_rows
+from lalith_shop.price_history import HISTORY
 from lalith_shop.setup import configure, ensure
 
 COMPANY = "Lalith Practice Shop"
@@ -90,6 +93,33 @@ def pay(invoice, amount, cash):
     invoice.reload()
 
 
+def delivery_site():
+    title = "Sample Business Delivery Site"
+    name = frappe.db.get_value("Address", {"address_title": title, "address_type": "Shipping"})
+    if name:
+        return name
+    return frappe.get_doc({
+        "doctype": "Address", "address_title": title, "address_type": "Shipping",
+        "address_line1": "Fictional warehouse, Bay 4", "city": "Sample Town", "country": "Sri Lanka",
+        "links": [{"link_doctype": "Customer", "link_name": CUSTOMER}],
+    }).insert().name
+
+
+def check_price_history(quote):
+    name = frappe.db.get_value("Item Price", {"item_code": FAN, "price_list": "Lalith Business"})
+    price = frappe.get_doc("Item Price", name)
+    original = price.price_list_rate
+    price.price_list_rate += 50
+    price.save()
+    history = frappe.get_list(HISTORY, filters={"source_item_price": name, "event": "Updated"},
+                              fields=["old_rate", "new_rate", "changed_by", "changed_on"],
+                              order_by="creation desc", limit=1)
+    assert history and history[0].old_rate == original and history[0].new_rate == original + 50
+    assert history[0].changed_on and history[0].changed_by == "Administrator"
+    assert quote.reload().items[0].rate == 4500
+    print("PASS dated item price changes preserve the original quotation price")
+
+
 def run_checks():
     from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
     from erpnext.selling.doctype.quotation.quotation import make_sales_order
@@ -99,6 +129,12 @@ def run_checks():
 
     shop = prepare()
     warehouse = shop["warehouse"]
+    order_meta = frappe.get_meta("Sales Order")
+    order_fields = [field.fieldname for field in order_meta.fields]
+    position = order_fields.index("customer_name") + 1
+    assert order_fields[position:position + 2] == ["po_no", "po_date"]
+    assert order_meta.get_field("po_no").label == "Customer PO Number"
+    print("PASS customer PO number appears next to the customer on Sales Order")
     before = stock(FAN, warehouse)
     opened = post({"doctype": "POS Opening Entry", "company": COMPANY, "pos_profile": shop["profile"],
         "user": "Administrator", "period_start_date": now_datetime(),
@@ -113,36 +149,59 @@ def run_checks():
     balanced(sale)
     print("PASS cash POS sale updates stock and accounts")
 
+    today = getdate(nowdate())
+    site = delivery_site()
     quote = post({"doctype": "Quotation", "quotation_to": "Customer", "party_name": CUSTOMER,
-        "company": COMPANY, "transaction_date": nowdate(), "selling_price_list": "Lalith Business",
-        "items": [{"item_code": FAN, "qty": 1, "rate": 4500, "warehouse": warehouse}]})
+        "company": COMPANY, "transaction_date": today, "valid_till": today + timedelta(days=10),
+        "shipping_address_name": site, "selling_price_list": "Lalith Business",
+        "items": [{"item_code": FAN, "qty": 1, "rate": 4500, "warehouse": warehouse,
+                   "custom_lalith_supplier": SUPPLIER}]})
     assert stock(FAN, warehouse) == before - 2
+    assert quote.reload().items[0].custom_lalith_supplier == SUPPLIER and quote.shipping_address_name == site
+    assert overview(COMPANY)["quote_count"] >= 1
     order = make_sales_order(quote.name)
-    order.delivery_date = nowdate()
+    po = f"SAMPLE-PO-{quote.name}"
+    order.po_no = po
+    order.po_date = order.delivery_date = today
     for row in order.items:
         row.delivery_date = nowdate()
         row.warehouse = warehouse
     order.insert()
     order.submit()
+    assert order.reload().po_no == po
+    assert any(row.po_no == po for row in overview(COMPANY)["orders"])
     delivery = make_delivery_note(order.name)
     delivery.set_warehouse = warehouse
     for row in delivery.items:
         row.warehouse = warehouse
     delivery.insert()
     delivery.submit()
+    assert delivery.po_no == po and delivery.shipping_address_name == site
     assert stock(FAN, warehouse) == before - 3
     invoice = make_sales_invoice(delivery.name)
+    invoice.due_date = today + timedelta(days=3)
+    for term in invoice.payment_schedule:
+        term.due_date = invoice.due_date
     invoice.insert()
     invoice.submit()
-    assert not invoice.update_stock
+    assert invoice.po_no == po and not invoice.update_stock
     assert stock(FAN, warehouse) == before - 3
     assert flt(invoice.outstanding_amount) == 4500
     balanced(invoice)
     pay(invoice, 2000, shop["cash"])
     assert flt(invoice.outstanding_amount) == 2500
+    reminder = next(row for row in payment_rows(COMPANY, today, 3) if row["invoice"] == invoice.name)
+    assert reminder["status"] == "Due soon" and reminder["amount"] == 2500
+    overdue = next(row for row in payment_rows(COMPANY, today + timedelta(days=4), 3) if row["invoice"] == invoice.name)
+    assert overdue["status"] == "Overdue" and overdue["amount"] == 2500
+    add_payment_alert("Administrator", reminder)
+    add_payment_alert("Administrator", reminder)
+    assert frappe.db.count("Notification Log", {"document_name": invoice.name, "type": "Alert"}) == 1
     pay(invoice, 2500, shop["cash"])
     assert flt(invoice.outstanding_amount) == 0
-    print("PASS quotation, sales order, delivery, credit invoice and partial payment")
+    assert all(row["invoice"] != invoice.name for row in payment_rows(COMPANY, today, 3))
+    print("PASS customer PO links, delivery address, credit invoice, partial receipts and reminders")
+    check_price_history(quote)
 
     order = post({"doctype": "Purchase Order", "company": COMPANY, "supplier": SUPPLIER,
         "schedule_date": nowdate(), "items": [
@@ -201,9 +260,16 @@ def run_checks():
     print("PASS repair approval, single stock issue, labour invoice and collection")
 
     for doc, format_name in ((invoice, "Invoice"), (quote, "Quotation"), (delivery, "Delivery Note")):
-        html = frappe.get_print(doc.doctype, doc.name, print_format=f"Lalith Company {format_name}")
+        pdf_format = f"Lalith Electricals {format_name}"
+        html = frappe.get_print(doc.doctype, doc.name, print_format=pdf_format)
         assert doc.name in html and "Sample ceiling fan" in html
-    print("PASS invoice, quotation and delivery-note HTML printing")
+        assert SUPPLIER not in html
+        if doc.doctype in ("Sales Invoice", "Delivery Note"):
+            assert po in html
+        if doc.doctype == "Sales Invoice":
+            assert "<th>Number</th><th>Items</th><th>Units</th><th>QTY</th><th>Unit Cost</th><th>Amount</th>" in html
+        assert frappe.get_print(doc.doctype, doc.name, print_format=pdf_format, as_pdf=True).startswith(b"%PDF-")
+    print("PASS invoice, quotation and delivery note generate PDFs")
     frappe.db.commit()
 
 
