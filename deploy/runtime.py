@@ -25,11 +25,13 @@ def site_run(*arguments):
 def initialize():
     if CONFIG.exists():
         site_run("list-apps")
+        site_run("migrate")
         print("Reusing the existing site.")
         return
     run("new-site", SITE, "--db-root-username", "root", "--db-root-password", os.environ["DB_ROOT_PASSWORD"],
         "--admin-password", os.environ["ADMIN_PASSWORD"], "--mariadb-user-host-login-scope=%",
         "--install-app", "erpnext", "--install-app", "lalith_shop", "--set-default")
+    site_run("enable-scheduler")
 
 
 def backup():

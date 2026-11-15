@@ -1,0 +1,205 @@
+{
+ "doctype": "DocType",
+ "name": "Lalith Price Change",
+ "module": "Lalith Shop",
+ "engine": "InnoDB",
+ "modified": "2026-11-15 00:00:00.000000",
+ "field_order": [
+  "item_code",
+  "price_list",
+  "event",
+  "old_rate",
+  "new_rate",
+  "change_percent",
+  "comparable",
+  "changed_on",
+  "changed_by",
+  "source_item_price",
+  "currency",
+  "previous_currency",
+  "uom",
+  "packing_unit",
+  "customer",
+  "supplier",
+  "batch_no",
+  "valid_from",
+  "valid_upto",
+  "previous_context"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "label": "Item",
+   "fieldtype": "Link",
+   "options": "Item",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "reqd": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "price_list",
+   "label": "Price List",
+   "fieldtype": "Link",
+   "options": "Price List",
+   "in_standard_filter": 1,
+   "reqd": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "event",
+   "label": "Event",
+   "fieldtype": "Select",
+   "options": "Opening price\nCreated\nUpdated\nDeleted",
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "old_rate",
+   "label": "Previous Rate",
+   "fieldtype": "Currency",
+   "options": "previous_currency",
+   "in_list_view": 1,
+   "depends_on": "eval:doc.event==='Updated'||doc.event==='Deleted'",
+   "read_only": 1
+  },
+  {
+   "fieldname": "new_rate",
+   "label": "New Rate",
+   "fieldtype": "Currency",
+   "options": "currency",
+   "in_list_view": 1,
+   "depends_on": "eval:doc.event!=='Deleted'",
+   "read_only": 1
+  },
+  {
+   "fieldname": "change_percent",
+   "label": "Change %",
+   "fieldtype": "Percent",
+   "precision": "2",
+   "depends_on": "comparable",
+   "read_only": 1
+  },
+  {
+   "fieldname": "comparable",
+   "label": "Comparable Rates",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "changed_on",
+   "label": "Recorded On",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "changed_by",
+   "label": "Recorded By",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_item_price",
+   "label": "Item Price Reference",
+   "fieldtype": "Data",
+   "search_index": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "currency",
+   "label": "Currency",
+   "fieldtype": "Link",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "previous_currency",
+   "label": "Previous Currency",
+   "fieldtype": "Link",
+   "options": "Currency",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "uom",
+   "label": "Unit of Measure",
+   "fieldtype": "Link",
+   "options": "UOM",
+   "read_only": 1
+  },
+  {
+   "fieldname": "packing_unit",
+   "label": "Packing Unit",
+   "fieldtype": "Int",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "label": "Customer",
+   "fieldtype": "Link",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "supplier",
+   "label": "Supplier",
+   "fieldtype": "Link",
+   "options": "Supplier",
+   "read_only": 1
+  },
+  {
+   "fieldname": "batch_no",
+   "label": "Batch No",
+   "fieldtype": "Link",
+   "options": "Batch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "valid_from",
+   "label": "Valid From",
+   "fieldtype": "Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "valid_upto",
+   "label": "Valid Through",
+   "fieldtype": "Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "previous_context",
+   "label": "Previous Price Details",
+   "fieldtype": "Code",
+   "options": "JSON",
+   "depends_on": "previous_context",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "export": 1,
+   "report": 1
+  },
+  {
+   "role": "Sales Master Manager",
+   "read": 1,
+   "export": 1,
+   "report": 1
+  },
+  {
+   "role": "Purchase Master Manager",
+   "read": 1,
+   "export": 1,
+   "report": 1
+  }
+ ],
+ "sort_field": "changed_on",
+ "sort_order": "DESC",
+ "title_field": "item_code"
+}

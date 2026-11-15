@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 import json
 from pathlib import Path
 import subprocess
@@ -12,7 +13,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "apps" / "lalith_shop"))
-from lalith_shop.policy import grouped_parts, validate_job
+from lalith_shop.policy import grouped_parts, payment_stage, validate_job
 from tools import shop
 
 
@@ -135,6 +136,30 @@ class Printing(unittest.TestCase):
             self.assertIn("Sample &amp; Co", html)
             self.assertNotIn("<script>bad()", html)
             self.assertEqual("Net total" in html, doctype != "Delivery Note")
+
+    def test_shop_invoice_matches_column_order_and_escapes_addresses(self):
+        source = ROOT / "apps" / "lalith_shop" / "lalith_shop" / "templates" / "shop_invoice.html"
+        template = Environment(undefined=StrictUndefined).from_string(source.read_text())
+        doc = Doc(company="Lalith Practice Shop", name="SAMPLE-01", docstatus=1, posting_date="2026-01-01",
+                  customer_name="Sample & Co", address_display="First Line<br>Second & Line",
+                  shipping_address="Warehouse <b>4</b>", shipping_address_name="Sample Shipping", customer_address="Sample Billing",
+                  po_no="SAMPLE-PO", currency="LKR", grand_total=7900, in_words="Seven Thousand Nine Hundred",
+                  items=[Doc(item_name="<script>bad()</script>", qty=2, uom="Nos", rate=3950, amount=7900)])
+        html = template.render(doc=doc, letter_head=None, no_letterhead=False, footer=None)
+        headers = "<th>Number</th><th>Items</th><th>Units</th><th>QTY</th><th>Unit Cost</th><th>Amount</th>"
+        self.assertIn(headers, html)
+        for value in ("Sample &amp; Co", "Second &amp; Line", "Warehouse 4", "SAMPLE-PO", "3,950.00", "7,900.00"):
+            self.assertIn(value, html)
+        self.assertNotIn("<script>bad()", html)
+
+
+class PaymentStages(unittest.TestCase):
+    def test_due_soon_and_overdue_use_calendar_days(self):
+        today = date(2026, 11, 15)
+        for days, lead, status in ((-1, 3, "Overdue"), (0, 0, "Due today"), (3, 3, "Due soon"),
+                                   (4, 3, None), (1, 0, None)):
+            with self.subTest(days=days, lead=lead):
+                self.assertEqual(payment_stage(today + timedelta(days=days), today, lead), status)
 
 
 if __name__ == "__main__":

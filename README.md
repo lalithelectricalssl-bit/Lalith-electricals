@@ -1,6 +1,6 @@
 # Lalith Electricals ERPNext
 
-Run actual ERPNext v16.53.0 on your Mac M2. It provides stock, POS, company credit sales, quotations, sales orders, delivery notes, invoices, purchases, suppliers, payments and double-entry accounting. The Lalith Shop app adds a workspace, electrical repair jobs and company print formats.
+Run ERPNext v16.53.0 on your Mac M2. Open **Shop Operations** for customer POs, quotations, payments and inventory. ERPNext's linked transactions handle retail POS, stock, purchases, invoices and accounting. The Lalith Shop app adds payment reminders, item price history, electrical repair jobs and printable shop documents.
 
 [Start with the Mac installation guide](docs/MAC_SETUP.md). The practice installation uses fictional customers, a supplier, fans and spare parts in its own database.
 
@@ -13,7 +13,7 @@ python3 tools/shop.py --demo install
 python3 tools/shop.py --demo credentials
 ```
 
-Open http://localhost:8081 and sign in as **Administrator** with the initial password from Terminal. Search for **Lalith Electricals** or **Electrical Repair Job** in ERPNext.
+Open http://localhost:8081 and sign in as **Administrator** with the initial password from Terminal. Search for **Shop Operations** in ERPNext or open it from the **Lalith Electricals** workspace.
 
 ## Set up the shop
 
@@ -53,4 +53,4 @@ GitHub stores the source and fictional test data. Real accounts, passwords, cust
 
 [GitHub Actions](https://github.com/lalithelectricalssl-bit/Lalith-electricals/actions) checks the local tools and attempts the ERPNext transactions and a restore on a disposable practice site. See the latest run for the actual result.
 
-The three generic Lalith Company print formats support ERPNext Letter Head. The supplied Word invoice is encrypted, so matching its layout requires an unlocked copy or clear full-page image. Use PDF for a styled document and ERPNext's export for CSV data.
+The **Lalith Electricals Invoice** print format follows the shop's six-column invoice. Add your branded image to **Letter Head** on the local site. The [shop guide](docs/SHOP_GUIDE.md) explains the PDF buttons and letterhead setup.

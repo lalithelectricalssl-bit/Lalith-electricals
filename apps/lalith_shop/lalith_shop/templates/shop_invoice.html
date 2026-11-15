@@ -1,0 +1,99 @@
+<style>
+  @page { size: Letter; }
+  .print-format .lalith-invoice { font: 10.5pt/1.24 Arial, sans-serif; color: #0b0b0b; }
+  .lalith-invoice .invoice-letterhead { border-bottom: 1.7pt solid #111; padding: 19pt 0 19pt; margin: 0 0 5pt; }
+  .lalith-invoice .invoice-letterhead img { max-width: 100%; height: auto; }
+  .lalith-invoice .invoice-company { padding: 13pt 10pt; text-align: right; }
+  .lalith-invoice .invoice-company strong { font-size: 14pt; }
+  .lalith-invoice .invoice-details, .lalith-invoice .invoice-items, .lalith-invoice .invoice-signatures { width: 100%; border-collapse: collapse; }
+  .lalith-invoice .invoice-details td { border: 0; padding: 0 0 0 4%; vertical-align: top; }
+  .lalith-invoice .invoice-details .invoice-meta { width: 28%; padding: 9pt 0 0; overflow-wrap: anywhere; }
+  .lalith-invoice .invoice-recipient { width: 65%; border-collapse: collapse; }
+  .lalith-invoice .invoice-recipient th, .lalith-invoice .invoice-recipient td { border: .6pt solid #111; padding: 2pt 5pt; text-align: left; }
+  .lalith-invoice .invoice-heading { margin: 17pt 0 9pt; text-align: center; font-size: 14pt; font-weight: bold; }
+  .lalith-invoice .invoice-greeting { margin: 0 auto 4pt; max-width: 89%; text-align: center; }
+  .lalith-invoice .invoice-items { table-layout: fixed; }
+  .lalith-invoice .invoice-items th, .lalith-invoice .invoice-items td { border: .6pt solid #111; padding: 3pt 4pt; color: #111; }
+  .lalith-invoice .invoice-items thead { display: table-header-group; }
+  .lalith-invoice .invoice-items tr { break-inside: avoid; page-break-inside: avoid; }
+  .lalith-invoice .invoice-items thead th { text-align: center; font-weight: bold; }
+  .lalith-invoice .invoice-items tbody td { text-align: center; overflow-wrap: anywhere; }
+  .lalith-invoice .invoice-items tbody tr.line td { padding-top: 9pt; padding-bottom: 3pt; }
+  .lalith-invoice .invoice-items tbody td.item { text-align: left; padding-left: 7pt; }
+  .lalith-invoice .invoice-items .invoice-total td { font-weight: bold; padding: 11pt 4pt 2pt; }
+  .lalith-invoice .invoice-signatures { margin: 62pt 0 0 4%; width: 72%; break-inside: avoid; page-break-inside: avoid; }
+  .lalith-invoice .invoice-signatures td { width: 50%; padding: 0; border: 0; text-align: left; }
+  .lalith-invoice .invoice-signatures span { display: block; width: 100pt; border-top: 1.3pt dotted #111; padding-top: 9pt; font-style: italic; }
+</style>
+{% macro lines(address) -%}
+{% for part in ((address or "") | replace("<br>", "|") | replace("<br/>", "|") | replace("<br />", "|") | replace("\n", "|")).split("|") %}
+{% if part | striptags | trim %}{{ part | striptags | trim | e }}<br>{% endif %}
+{% endfor %}
+{%- endmacro %}
+{% macro money(amount) -%}{{ "{:,.2f}".format(amount or 0) }}{%- endmacro %}
+{% set total = doc.get("rounded_total") if not doc.get("disable_rounded_total") and doc.get("rounded_total") else doc.grand_total %}
+{% set billing = doc.get("address_display") %}
+{% set delivery = doc.get("shipping_address") %}
+<div class="lalith-invoice">
+  <div class="invoice-letterhead">
+    {% if letter_head and not no_letterhead %}
+      {{ letter_head }}
+    {% else %}
+      <div class="invoice-company"><strong>{{ doc.company | upper | e }}</strong><br>{{ lines(doc.get("company_address_display")) }}</div>
+    {% endif %}
+  </div>
+  <table class="invoice-details">
+    <tr>
+      <td>
+        <table class="invoice-recipient">
+          <tr><th>Name &amp; Address</th></tr>
+          <tr><td>
+            {{ (doc.get("customer_name") or doc.get("customer") or "") | e }}<br>
+            {{ lines(billing) }}
+            {% if delivery and delivery != billing and doc.get("shipping_address_name") != doc.get("customer_address") %}
+              <strong>Deliver to</strong><br>{{ lines(delivery) }}
+            {% endif %}
+          </td></tr>
+        </table>
+      </td>
+      <td class="invoice-meta">
+        Date &ndash; {{ doc.get_formatted("posting_date") | e }}<br>
+        Invoice No &ndash; {{ doc.name | e }}<br>
+        PO No &ndash; {{ (doc.get("po_no") or "") | e }}
+        {% if doc.get("currency") and doc.currency != "LKR" %}<br>Currency &ndash; {{ doc.currency | e }}{% endif %}
+      </td>
+    </tr>
+  </table>
+
+  <div class="invoice-heading">INVOICE{% if doc.docstatus == 0 %} · DRAFT{% endif %}</div>
+  {% if doc.company == "Lalith Practice Shop" %}<p class="invoice-greeting"><strong>SAMPLE DOCUMENT</strong></p>{% endif %}
+  <p class="invoice-greeting">Thank you for your valued business. We appreciate the opportunity to serve you and remain committed to delivering reliable products and professional service.</p>
+  <table class="invoice-items">
+    <colgroup><col style="width:10%"><col style="width:50%"><col style="width:7.5%"><col style="width:6.5%"><col style="width:13%"><col style="width:13%"></colgroup>
+    <thead><tr><th>Number</th><th>Items</th><th>Units</th><th>QTY</th><th>Unit Cost</th><th>Amount</th></tr></thead>
+    <tbody>
+    {% for line in doc.items %}
+      <tr class="line">
+        <td>{{ loop.index }}</td>
+        <td class="item">{{ line.item_name | e }}</td>
+        <td>{{ (line.uom or "") | upper | e }}</td>
+        <td>{{ ("%.9f" | format(line.qty or 0)).rstrip("0").rstrip(".") }}</td>
+        <td>{{ money(line.rate) }}</td>
+        <td>{{ money(line.amount) }}</td>
+      </tr>
+    {% endfor %}
+    {% if doc.get("total_taxes_and_charges") or doc.get("discount_amount") or doc.get("rounding_adjustment") %}
+      <tr><td colspan="5">Net Total</td><td>{{ money(doc.net_total) }}</td></tr>
+      {% for tax in doc.get("taxes", []) %}
+        {% if tax.tax_amount_after_discount_amount %}<tr><td colspan="5">{{ tax.description | e }}</td><td>{{ money(tax.tax_amount_after_discount_amount) }}</td></tr>{% endif %}
+      {% endfor %}
+      {% if doc.get("rounding_adjustment") and not doc.get("disable_rounded_total") %}
+        <tr><td colspan="5">Rounding</td><td>{{ money(doc.rounding_adjustment) }}</td></tr>
+      {% endif %}
+    {% endif %}
+      <tr class="invoice-total"><td colspan="4">{{ (doc.get("in_words") or "") | e }}</td><td>Total</td><td>{{ money(total) }}</td></tr>
+    </tbody>
+  </table>
+  <table class="invoice-signatures"><tr><td><span>Prepared By</span></td><td><span>Received By</span></td></tr></table>
+  {% if footer and not no_letterhead %}<div class="letter-head-footer">{{ footer }}</div>{% endif %}
+</div>

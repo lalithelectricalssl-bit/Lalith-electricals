@@ -14,4 +14,4 @@ dependencies = []
 include = ["lalith_shop*"]
 
 [tool.setuptools.package-data]
-lalith_shop = ["*.txt", "**/*.json", "**/*.js", "**/*.html"]
+lalith_shop = ["*.txt", "**/*.json", "**/*.js", "**/*.css", "**/*.html"]

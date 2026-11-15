@@ -1,0 +1,97 @@
+.lalith-operations {
+	--shop-canvas: #f2f4f8;
+	--shop-panel: #fff;
+	--shop-ink: #172033;
+	--shop-soft-ink: #53627b;
+	--shop-line: #e3e8f1;
+	--shop-blue: #1557d7;
+	--shop-blue-surface: #e8f0ff;
+	--shop-red: #ad2640;
+	--shop-red-surface: #fff0f2;
+	--shop-orange: #925315;
+	--shop-orange-surface: #fff3e0;
+	--shop-green: #177050;
+	--shop-green-surface: #e9f6f0;
+	display: grid;
+	grid-template-columns: 195px minmax(0, 1fr);
+	min-height: 670px;
+	background: var(--shop-canvas);
+	color: var(--shop-ink);
+	border: 1px solid var(--shop-line);
+	border-radius: 22px;
+	overflow: hidden;
+	font-family: -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+}
+.lalith-operations .shop-sidebar { background: var(--shop-panel); border-right: 1px solid var(--shop-line); padding: 27px 14px; }
+.lalith-operations .shop-brand { display: flex; align-items: center; gap: 9px; margin: 0 3px 30px; font-size: 14px; }
+.lalith-operations .shop-mark { background: #ffe278; color: #10244c; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; font-size: 24px; line-height: 1; flex-shrink: 0; }
+.lalith-operations .shop-nav { display: grid; gap: 4px; }
+.lalith-operations .shop-button { border: 0; background: transparent; color: inherit; font: inherit; font-weight: 600; padding: 0; cursor: pointer; }
+.lalith-operations .shop-button:focus-visible, .lalith-operations select:focus-visible { outline: 2px solid var(--shop-blue); outline-offset: 3px; }
+.lalith-operations .shop-nav-link { text-align: left; padding: 9px 12px; border-radius: 10px; font-size: 13px; color: var(--shop-soft-ink); white-space: nowrap; }
+.lalith-operations .shop-nav-link.selected, .lalith-operations .shop-nav-link:hover { background: var(--shop-blue-surface); color: var(--shop-blue); font-weight: 700; }
+.lalith-operations .shop-content { padding: 30px; min-width: 0; }
+.lalith-operations .shop-header, .lalith-operations .shop-toolbar, .lalith-operations .shop-actions, .lalith-operations .shop-panel-head, .lalith-operations .shop-payments li { display: flex; align-items: center; gap: 10px; }
+.lalith-operations .shop-header, .lalith-operations .shop-panel-head, .lalith-operations .shop-payments li { justify-content: space-between; }
+.lalith-operations .shop-actions { flex-wrap: wrap; margin: 21px 0; }
+.lalith-operations .shop-date { margin: 0 0 2px; color: var(--shop-soft-ink); font-size: 13px; font-weight: 600; }
+.lalith-operations h2, .lalith-operations h3 { margin: 0; color: var(--shop-ink); font-weight: 700; }
+.lalith-operations h2 { font-size: clamp(26px, 4vw, 38px); letter-spacing: -0.045em; }
+.lalith-operations h3 { font-size: 16px; letter-spacing: -0.015em; }
+.lalith-operations .shop-toolbar { flex-wrap: wrap; justify-content: end; }
+.lalith-operations .shop-company, .lalith-operations .shop-primary, .lalith-operations .shop-secondary { border-radius: 12px; padding: 9px 13px; min-height: 39px; font-size: 13px; }
+.lalith-operations .shop-company, .lalith-operations .shop-secondary { background: var(--shop-panel); border: 1px solid var(--shop-line); color: var(--shop-ink); }
+.lalith-operations .shop-company { max-width: 240px; font: inherit; font-size: 13px; }
+.lalith-operations .shop-primary { background: var(--shop-blue); color: #fff; border: 1px solid var(--shop-blue); }
+.lalith-operations .shop-primary:hover { background: #0e459d; }
+.lalith-operations .shop-secondary:hover { border-color: var(--shop-blue); }
+.lalith-operations .shop-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+.lalith-operations .shop-metric, .lalith-operations .shop-panel { background: var(--shop-panel); border: 1px solid var(--shop-line); border-radius: 17px; }
+.lalith-operations .shop-metric { display: grid; align-content: start; gap: 6px; padding: 16px; }
+.lalith-operations .shop-metric-label { font-size: 13px; font-weight: 700; }
+.lalith-operations .shop-metric strong { font-size: clamp(17px, 2vw, 24px); letter-spacing: -.035em; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.lalith-operations .metric-overdue .shop-metric-label { color: var(--shop-red); }
+.lalith-operations .metric-soon .shop-metric-label { color: var(--shop-orange); }
+.lalith-operations .metric-orders .shop-metric-label { color: var(--shop-blue); }
+.lalith-operations .metric-quotes .shop-metric-label { color: var(--shop-green); }
+.lalith-operations small { display: block; color: var(--shop-soft-ink); font-size: 12px; overflow-wrap: anywhere; }
+.lalith-operations .shop-panels { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 13px; margin-top: 18px; align-items: start; }
+.lalith-operations .shop-panel { min-width: 0; }
+.lalith-operations .shop-panel-head { padding: 16px; border-bottom: 1px solid var(--shop-line); }
+.lalith-operations .shop-text-link { font-size: 13px; color: var(--shop-blue); text-align: start; overflow-wrap: anywhere; }
+.lalith-operations .shop-text-link:hover { text-decoration: underline; }
+.lalith-operations .shop-badge { display: inline-block; border-radius: 8px; padding: 3px 7px; font-size: 11px; font-weight: 700; min-width: max-content; }
+.lalith-operations .shop-badge.neutral, .lalith-operations .shop-badge.soon { background: var(--shop-blue-surface); color: var(--shop-blue); }
+.lalith-operations .shop-badge.today { background: var(--shop-orange-surface); color: var(--shop-orange); }
+.lalith-operations .shop-badge.overdue { background: var(--shop-red-surface); color: var(--shop-red); }
+.lalith-operations .shop-table-scroll { overflow-x: auto; }
+.lalith-operations .shop-table { width: 100%; font-size: 13px; }
+.lalith-operations .shop-table td, .lalith-operations .shop-table th { text-align: left; vertical-align: top; padding: 11px 10px; border-bottom: 1px solid var(--shop-line); }
+.lalith-operations .shop-table th { font-weight: 600; font-size: 11px; color: var(--shop-soft-ink); white-space: nowrap; }
+.lalith-operations .shop-table td:first-child, .lalith-operations .shop-table th:first-child { padding-left: 16px; }
+.lalith-operations .shop-table tr:last-child td { border: 0; }
+.lalith-operations .shop-payments { list-style: none; margin: 0; padding: 0 16px; }
+.lalith-operations .shop-payments li { border-bottom: 1px solid var(--shop-line); padding: 12px 0; }
+.lalith-operations .shop-payments li:last-child { border: 0; }
+.lalith-operations .shop-payment-amount { text-align: right; font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lalith-operations .shop-payment-amount strong { display: block; margin: 0 0 3px; }
+.lalith-operations .shop-empty { padding: 18px 16px; color: var(--shop-soft-ink); margin: 0; }
+.lalith-operations .shop-message { grid-column: 1 / -1; padding: 25px; margin: 0; }
+.lalith-operations .shop-message button { margin-left: 8px; }
+.lalith-operations .shop-footer { margin-top: 16px; }
+@media (max-width: 1080px) {
+	.lalith-operations { grid-template-columns: 160px minmax(0, 1fr); }
+	.lalith-operations .shop-content { padding: 21px; }
+	.lalith-operations .shop-panels { grid-template-columns: 1fr; }
+}
+@media (max-width: 730px) {
+	.lalith-operations { grid-template-columns: minmax(0, 1fr); }
+	.lalith-operations .shop-sidebar { padding: 14px; border-right: 0; border-bottom: 1px solid var(--shop-line); }
+	.lalith-operations .shop-brand { margin-bottom: 10px; }
+	.lalith-operations .shop-nav { display: flex; overflow-x: auto; padding: 3px; }
+	.lalith-operations .shop-content { padding: 16px; }
+	.lalith-operations .shop-header { flex-wrap: wrap; align-items: start; }
+	.lalith-operations .shop-toolbar { justify-content: start; }
+	.lalith-operations .shop-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+	.lalith-operations .shop-metric { padding: 12px; }
+}

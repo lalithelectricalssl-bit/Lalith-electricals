@@ -22,10 +22,14 @@
 {% if doc.company == "Lalith Practice Shop" %}<p><strong>SAMPLE DOCUMENT</strong></p>{% endif %}
 <table class="shop-meta"><tr>
 <td><strong>{{ (doc.get("customer_name") or doc.get("party_name") or doc.get("customer") or "") | e }}</strong><br>
-{{ (doc.get("address_display") or "") | striptags | e }}</td>
+{{ (doc.get("address_display") or "") | striptags | e }}
+{% if doc.get("shipping_address") and doc.get("shipping_address") != doc.get("address_display") %}
+<br><strong>Delivery address</strong><br>{{ doc.get("shipping_address") | striptags | e }}
+{% endif %}</td>
 <td class="shop-right">{{ doc.name | e }}<br>
 {{ doc.get_formatted("posting_date" if doc.get("posting_date") else "transaction_date") | e }}
 {% if doc.get("due_date") %}<br>Due {{ doc.get_formatted("due_date") | e }}{% endif %}
+{% if doc.get("valid_till") %}<br>Valid through {{ doc.get_formatted("valid_till") | e }}{% endif %}
 {% if doc.get("po_no") %}<br>PO {{ doc.po_no | e }}{% endif %}</td>
 </tr></table>
 <table class="shop-lines">

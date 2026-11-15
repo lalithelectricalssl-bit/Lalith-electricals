@@ -127,9 +127,10 @@ class Shop:
         self.compose("build", "--pull", "backend")
         self.compose("up", "-d", "--wait", "db", "redis-cache", "redis-queue")
         self.compose("run", "--rm", "--no-deps", "-T", "configurator")
-        self.tool("init")
-        if self.demo:
-            self.tool("demo")
+        with self.pause(resume_on_error=False, resume_on_success=False):
+            self.tool("init")
+            if self.demo:
+                self.tool("demo")
         self.start()
         print("Use Administrator and the password shown by the credentials command.")
 
@@ -147,7 +148,7 @@ class Shop:
         raise RuntimeError("ERPNext is still starting or has an error. Run the logs command.")
 
     @contextmanager
-    def pause(self, resume_on_error=True):
+    def pause(self, resume_on_error=True, resume_on_success=True):
         running = self.compose("ps", "--status", "running", "--services", capture=True).split()
         paused = [service for service in RUNTIME if service in running]
         if paused:
@@ -157,10 +158,10 @@ class Shop:
             yield
             successful = True
         finally:
-            if paused and (successful or resume_on_error):
+            if paused and (resume_on_success if successful else resume_on_error):
                 self.compose("start", *paused)
-            elif paused:
-                print("Restore failed. The shop services are stopped.", file=sys.stderr)
+            elif paused and not successful:
+                print("The operation failed. The shop services are stopped.", file=sys.stderr)
 
     @contextmanager
     def maintenance(self):
